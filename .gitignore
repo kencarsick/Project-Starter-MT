@@ -1,0 +1,41 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Dependencies (project-specific — uncomment as needed)
+# node_modules/
+# __pycache__/
+# *.pyc
+# target/
+# vendor/
+
+# Build output (project-specific — uncomment as needed)
+# dist/
+# build/
+# out/
+# .next/
+
+# Test artifacts
+e2e-screenshots/
+e2e-test-report.md
+coverage/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
