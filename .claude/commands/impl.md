@@ -146,9 +146,11 @@ AGENT_PROMPT=$(cat .claude/agents/<agent>.md \
 
 Agent invocation pattern:
 
-**Without tmux** (default):
+**Important**: Claude Code blocks nested sessions by default. All `claude -p` invocations MUST unset the `CLAUDECODE` environment variable:
+
+**Without tmux**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "<task-specific prompt>" \
   --system-prompt "$AGENT_PROMPT" \
   -C "$WORKTREE_PATH"
@@ -159,7 +161,7 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 WINDOW_NAME="<agent-role>"  # e.g., "orchestrator", "dev", "qa", "merge", "prod-qa"
 tmux new-window -t "$SESSION_NAME" -n "$WINDOW_NAME"
 tmux send-keys -t "$SESSION_NAME:$WINDOW_NAME" \
-  "timeout ${AGENT_TIMEOUT:-600} claude -p '<task-specific prompt>' --system-prompt \"\$AGENT_PROMPT\" -C \"$WORKTREE_PATH\"; exit" Enter
+  "unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p '<task-specific prompt>' --system-prompt \"\$AGENT_PROMPT\" -C \"$WORKTREE_PATH\"; exit" Enter
 ```
 
 Then wait for the agent to finish by polling for the sentinel file:
@@ -193,7 +195,7 @@ QA_REPORT_CONTENT=""
 
 **Invoke**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Read GitHub issue #<N> and create an implementation plan. Follow your system prompt instructions exactly." \
   --system-prompt "$ORCHESTRATOR_PROMPT" \
   -C "$WORKTREE_PATH"
@@ -213,7 +215,7 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 
 **Invoke**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Implement issue #<N> per the orchestrator plan. Follow your system prompt instructions exactly." \
   --system-prompt "$DEV_PROMPT" \
   -C "$WORKTREE_PATH"
@@ -235,7 +237,7 @@ On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix l
 
 **Invoke**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify the implementation for issue #<N>. Follow your system prompt instructions exactly." \
   --system-prompt "$QA_PROMPT" \
   -C "$WORKTREE_PATH"
@@ -271,7 +273,7 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 
 **Invoke**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Merge the PR for issue #<N>. Follow your system prompt instructions exactly." \
   --system-prompt "$MERGE_PROMPT" \
   -C "$WORKTREE_PATH"
@@ -299,7 +301,7 @@ To detect a SHA: check if the value matches `^[0-9a-f]{40}$`.
 
 **Invoke**:
 ```bash
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify issue #<N> is live in production. Follow your system prompt instructions exactly." \
   --system-prompt "$PROD_QA_PROMPT" \
   -C "$WORKTREE_PATH"
