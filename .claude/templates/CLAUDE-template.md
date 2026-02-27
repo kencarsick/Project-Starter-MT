@@ -108,6 +108,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Deployment
+
+<!-- Where is the project deployed? Used by Prod-QA agent for production verification -->
+
+- **Production URL**: {prod-url or "N/A"}
+- **Deploy method**: {deploy-method}
+- **Health check**: {health-check-url or command}
+
+---
+
 ## Key Files
 
 <!-- Important files to know about -->

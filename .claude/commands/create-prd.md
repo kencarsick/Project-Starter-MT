@@ -161,16 +161,28 @@ gh issue create \
   --body "Epic: #{epic-number}
 
 ## Goal
-{phase goal}
+{phase goal — one sentence}
+
+## Context
+{2-3 sentences of relevant background from the PRD — what this phase builds on, what it enables}
 
 ## Deliverables
-{deliverables list}
+- D1: {deliverable 1}
+- D2: {deliverable 2}
+- D3: {deliverable 3}
 
 ## Acceptance Criteria
-{acceptance criteria with pass/fail}
+- AC1: {criterion} — **Pass**: {condition} / **Fail**: {condition}
+- AC2: {criterion} — **Pass**: {condition} / **Fail**: {condition}
+- AC3: {criterion} — **Pass**: {condition} / **Fail**: {condition}
 
-## Validation Steps
-{validation commands}
+## Validation Commands
+\`\`\`bash
+{commands to verify this phase is complete}
+\`\`\`
+
+## Dependencies
+{List prior phases that must be completed first, or \"None\" for Phase 1}
 "
 ```
 
@@ -178,18 +190,35 @@ gh issue create \
 
 ```bash
 gh issue create \
-  --title "Execution: run end-to-end + post evidence" \
+  --title "Execution: end-to-end verification" \
   --label "type:task" \
   --body "Epic: #{epic-number}
 
 ## Goal
-Run the complete application end-to-end and post evidence that all acceptance criteria are met.
+Run the complete application end-to-end and verify all acceptance criteria from all phases are met.
+
+## Context
+This is the final verification task. All implementation phases must be complete before this task begins.
+
+## Deliverables
+- D1: All phases completed and verified
+- D2: E2E test suite passes
+- D3: Screenshots/evidence posted to this issue
+- D4: All TASK issues closed
 
 ## Acceptance Criteria
-- [ ] All phases completed and verified
-- [ ] E2E test suite passes
-- [ ] Screenshots/evidence posted
-- [ ] All TASK issues closed
+- AC1: All phase task issues are closed — **Pass**: \`gh issue list --label type:task --state open\` returns 0 / **Fail**: open tasks remain
+- AC2: E2E test suite passes — **Pass**: all tests green / **Fail**: any test failure
+- AC3: Evidence posted — **Pass**: screenshots/logs attached to this issue / **Fail**: no evidence
+
+## Validation Commands
+\`\`\`bash
+gh issue list --label \"type:task\" --state open
+# Expected: 0 open tasks (except this one)
+\`\`\`
+
+## Dependencies
+All Phase {1..N} tasks must be complete
 "
 ```
 
@@ -233,5 +262,5 @@ Update the EPIC issue body to include a checklist linking to all TASK issues:
 
 **PRD written to**: ./PRD.md
 
-Next step: `/init-project` to scaffold the project
+Next step: `/init-project` to scaffold the project, then `/impl #<first-task-issue>` to begin implementation
 ```

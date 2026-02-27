@@ -1,5 +1,5 @@
 ---
-description: "Initialize project from PRD — scaffold, install deps, configure tooling"
+description: "Initialize project from PRD — scaffold, install deps, configure tooling, generate CLAUDE.md + AGENTS.md"
 ---
 
 # Initialize Project from PRD
@@ -86,7 +86,7 @@ Ensure `.gitignore` is appropriate for the tech stack. Add common ignores:
 Create initial commit:
 ```bash
 git add -A
-git commit -m "chore: initialize project from PRD"
+git commit -m "chore: scaffold project from PRD"
 ```
 
 ### 8. Remote Repository (ask user)
@@ -112,7 +112,115 @@ Run these checks to verify everything works:
 4. **Build succeeds** (if applicable):
    - Run the build command — should produce output without errors
 
-### 10. Report
+### 10. Generate CLAUDE.md
+
+Now that the project is scaffolded and validated, analyze the codebase and generate CLAUDE.md.
+
+#### 10a. Discover
+
+**Detect project type** from config files:
+
+| File | Indicates |
+|------|-----------|
+| `package.json` | Node.js / JavaScript / TypeScript |
+| `pyproject.toml` or `requirements.txt` or `setup.py` | Python |
+| `Cargo.toml` | Rust |
+| `go.mod` | Go |
+| `pom.xml` or `build.gradle` | Java / Kotlin |
+| `Gemfile` | Ruby |
+| `composer.json` | PHP |
+| `Package.swift` | Swift |
+| `*.csproj` or `*.sln` | C# / .NET |
+| `Makefile` (alone) | C / C++ |
+| `deno.json` | Deno |
+| `bun.lockb` | Bun |
+
+**Map directory structure** (3 levels deep, excluding `node_modules`, `.git`, `venv`, `__pycache__`, `target`, `.next`, `dist`, `build`).
+
+**Identify framework** from dependency declarations:
+- Next.js, React, Vue, Svelte, Angular (frontend)
+- Django, FastAPI, Flask, Express, Rails, Gin, Actix, Axum (backend)
+
+#### 10b. Analyze
+
+**Extract tech stack** from config files:
+- Languages and versions
+- Frameworks and versions
+- Database(s) used
+- Key libraries and their purposes
+- Dev tools (linter, formatter, test framework)
+
+**Study patterns**:
+- **Naming conventions**: camelCase, snake_case, kebab-case, PascalCase
+- **File organization**: flat, nested by feature, nested by type
+- **Error handling**: try/catch, Result types, error middleware, custom error classes
+- **Type usage**: strict TypeScript, Python type hints, Go interfaces
+- **Test patterns**: framework, location, naming convention
+- **Import patterns**: absolute vs relative, barrel exports
+
+**Find key files**:
+- Entry points (main.py, index.ts, main.go, etc.)
+- Config files (env, yaml, toml, json)
+- Core business logic files
+- Router/API definitions
+- Database models/schemas
+
+#### 10c. Generate
+
+Read `.claude/templates/CLAUDE-template.md`.
+
+Fill all `{placeholder}` values with discovered information:
+- `{Project description and purpose}` — from PRD Section 1 (Executive Summary) or README
+- `{tech}` / `{why it's used}` — from actual tech stack discovered
+- `{dev-command}`, `{build-command}`, `{test-command}`, `{lint-command}` — from actual config
+- `{root}/` directory structure — from actual structure
+- Architecture description — from observed patterns and PRD Section 6
+- Code patterns — from analysis
+- Testing section — from test framework discovery
+- Key files — from analysis
+- Validation commands — from discovered build/test/lint commands
+- Deployment section — from PRD Section 9, or `"N/A"` if no deployment target specified
+
+**Adapt sections**:
+- **Remove** sections that don't apply (e.g., no "On-Demand Context" if no reference docs)
+- **Add** project-type-specific sections:
+  - Web app → API endpoints, component patterns
+  - Backend → database patterns, middleware
+  - Library → public API, usage examples
+  - CLI → command structure, argument patterns
+
+Write `CLAUDE.md` to project root.
+
+### 11. Generate AGENTS.md
+
+Read `.claude/templates/AGENTS-template.md`.
+
+Fill all placeholder values with project-specific information extracted during Step 10:
+
+- `{tech_stack_summary}` — from the tech stack analysis (e.g., "Next.js 14 + TypeScript + Tailwind CSS + PostgreSQL")
+- `{dev_command}` — from discovered dev server command (e.g., `npm run dev`)
+- `{build_command}` — from discovered build command (e.g., `npm run build`)
+- `{test_command}` — from discovered test command (e.g., `npm test`)
+- `{lint_command}` — from discovered lint command (e.g., `npm run lint`)
+- `{architecture_notes}` — from architecture analysis (e.g., "App Router with server components, API routes in /app/api/, Prisma ORM for database access")
+- `{special_constraints}` — from PRD Security section + any project-specific constraints (e.g., "All API routes require authentication middleware. Database migrations must be run before tests.")
+
+Write `AGENTS.md` to project root.
+
+### 12. Final Commit + Report
+
+Commit the generated documentation:
+```bash
+git add CLAUDE.md AGENTS.md
+git commit -m "docs: generate CLAUDE.md and AGENTS.md from project analysis"
+```
+
+If a remote was created in Step 8, push:
+```bash
+git push
+```
+
+Report:
 
 ```
 ## Project Initialized
@@ -123,12 +231,17 @@ Run these checks to verify everything works:
 **Dev Server**: {url}:{port}
 **Linter**: {tool} — passing
 **Tests**: {framework} — harness ready
+**Build**: passing
 **Git**: initialized with initial commit
+**CLAUDE.md**: generated from codebase analysis
+**AGENTS.md**: generated with project-specific agent rules
 
 **Files created**:
+- CLAUDE.md
+- AGENTS.md
 - .env.example
 - {config files}
 - {directory structure}
 
-Next step: `/create-rules` to generate CLAUDE.md
+Next step: `/impl #<issue-number>` to implement the first phase
 ```

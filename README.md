@@ -1,294 +1,184 @@
-# Universal Project Starter
+# Universal Project Starter v2
 
-A complete `.claude/` workflow system that builds any application from scratch. You handle the PRD — Claude handles everything else.
+A portable `.claude/` directory that transforms Claude Code into an autonomous multi-agent development team. You describe the idea — 5 independent AI agents handle everything else.
 
 ## What This Is
 
-A portable `.claude/` directory containing **9 commands**, **5 skills**, and **3 templates** that form an autonomous development pipeline. Copy it into any project directory and use Claude Code to go from idea to shipped features.
+Drop the `.claude/` folder into any empty project directory. It gives Claude Code **3 commands**, **5 agent roles**, **5 skills**, and **4 templates** that form a fully autonomous development pipeline — from idea to merged PR.
 
 **The workflow:**
 1. You describe your idea
 2. Claude interrogates you until requirements are crystal clear (clarity score >= 90/100)
 3. Claude generates an exhaustive PRD + GitHub Epic with Task issues
-4. Claude autonomously: scaffolds the project -> plans features -> implements -> tests -> verifies -> commits -> opens PRs
+4. Claude scaffolds the project, generates CLAUDE.md + AGENTS.md
+5. For each task issue: 5 independent agents plan, implement, test, merge, and verify in production
 
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/code) CLI installed and authenticated
 - [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated
-- Git installed
+- Git 2.20+ (for worktree support)
 
 ## Setup
 
 ```bash
-# 1. Clone this repo (or copy the .claude/ folder into your project)
-git clone <this-repo-url> my-new-project
-cd my-new-project
+# 1. Create your project directory
+mkdir my-new-project && cd my-new-project
 
-# 2. Verify gh is authenticated
-gh auth status
+# 2. Copy the .claude/ folder into it
+cp -r /path/to/project-starter/.claude/ .claude/
 
 # 3. Start Claude Code
 claude
 ```
 
-That's it. The commands and skills are automatically available in Claude Code.
+That's it. The commands are automatically available.
 
-## Quick Start — Build an App from Scratch
+## Quick Start
 
 ```
 # Step 1: Create the PRD (interactive — you answer questions)
 /create-prd "my-project-name"
 
-# Step 2: Initialize the project (autonomous)
+# Step 2: Initialize the project (autonomous — scaffolds, generates CLAUDE.md + AGENTS.md)
 /init-project
 
-# Step 3: Generate CLAUDE.md rules (autonomous)
-/create-rules
-
-# Step 4: Ship features phase by phase (fully autonomous)
-/ship "Phase 1"
-/ship "Phase 2"
-/ship "Phase 3"
-# ...repeat for each phase in the PRD
+# Step 3: Implement issues via multi-agent pipeline (fully autonomous)
+/impl #1
+/impl #2
+/impl #3
+# ...repeat for each task issue created by /create-prd
 ```
 
-## Commands Reference
+## Commands
 
 ### `/create-prd` — Create Product Requirements Document
 **Usage**: `/create-prd "project-name"`
-**User interaction**: Yes (this is the only command requiring user input)
+**Interaction**: Yes (the only command requiring user input)
 
 Transforms a vague idea into a decision-complete PRD through structured interrogation.
 
-**What happens:**
-1. Scores your initial idea's clarity (0-100)
-2. Asks structured multiple-choice questions across 7 categories until clarity >= 90
+1. Scores your idea's clarity (0-100) across 4 dimensions
+2. Asks multiple-choice questions across 7 categories until clarity >= 90
 3. Proposes minimal approach with alternatives (Devil's Advocate)
-4. Scans for reusable patterns
-5. Generates a 16-section PRD document
-6. Creates GitHub Epic issue + Task issues (one per implementation phase)
-7. Gets your final approval
+4. Generates a 16-section PRD
+5. Creates GitHub Epic + Task issues (one per implementation phase)
 
-**Output:**
-- `PRD.md` — local PRD document
-- GitHub Epic issue (label: `type:epic`)
-- GitHub Task issues (label: `type:task`, one per phase)
-
-**Question categories:**
-- A) Problem & stakes — what's the problem and why does it matter?
-- B) Success definition — what does "done" look like?
-- C) Scope boundaries — what's in and what's out?
-- D) Data model — what data do we store? (only if applicable)
-- E) Failure modes — what can go wrong?
-- F) Technology preferences — what stack?
-- G) User experience — how should it look/feel? (only if user-facing)
+**Output**: `PRD.md`, GitHub Epic (label: `type:epic`), Task issues (label: `type:task`)
 
 ---
 
-### `/init-project` — Initialize Project
+### `/init-project` — Scaffold & Configure
 **Usage**: `/init-project`
-**User interaction**: Minimal (may ask about remote repo creation)
+**Interaction**: Minimal (asks about GitHub remote creation)
 
-Reads the PRD and scaffolds the project with the right tech stack.
+Reads the PRD and sets up the entire project.
 
-**What happens:**
-1. Reads PRD.md for tech stack, directory structure, dependencies
-2. Runs appropriate scaffold command (create-next-app, cargo new, uv init, etc.)
-3. Installs dependencies
-4. Sets up linter, formatter, test framework
-5. Creates `.env.example`
-6. `git init` + initial commit
-7. Validates everything works (dev server, linter, tests)
-
----
-
-### `/create-rules` — Generate CLAUDE.md
-**Usage**: `/create-rules`
-**User interaction**: None
-
-Analyzes the codebase and generates a `CLAUDE.md` file with full project context.
-
-**What happens:**
-1. Discovers project type from config files
-2. Analyzes code patterns, naming conventions, file organization
-3. Generates `CLAUDE.md` from universal template
-4. Writes to project root and commits
+1. Detects tech stack from PRD, runs appropriate scaffold (Next.js, Django, Rust, Go, etc.)
+2. Installs dependencies, configures linter/formatter/test framework
+3. Creates `.env.example` and `.gitignore`
+4. Initializes git with initial commit
+5. Validates setup (dev server, linter, tests, build)
+6. **Generates `CLAUDE.md`** from codebase analysis
+7. **Generates `AGENTS.md`** with project-specific agent rules
 
 ---
 
-### `/plan-feature` — Create Implementation Plan
-**Usage**: `/plan-feature "Phase 1"` or `/plan-feature #42` or `/plan-feature "add user auth"`
-**User interaction**: None (may ask if requirements are ambiguous)
+### `/impl` — Multi-Agent Pipeline
+**Usage**: `/impl #42` (GitHub issue number)
+**Interaction**: None (fully autonomous)
 
-Creates an information-dense, implementation-ready plan. Philosophy: "Context is King."
+Spawns 5 independent `claude -p` processes in an isolated git worktree.
 
-**What happens:**
-1. Reads PRD phase or GitHub issue
-2. Deep codebase analysis (patterns, conventions, dependencies)
-3. External research (library docs, best practices)
-4. Strategic planning (architecture, edge cases, security)
-5. Generates step-by-step plan with validation commands
+**Pipeline stages:**
 
-**Output**: `.claude/plans/{feature-name}.md`
+| Stage | Agent | What It Does |
+|-------|-------|-------------|
+| 1 | **Orchestrator** | Reads issue, creates implementation plan |
+| 2 | **Dev** | Implements code + tests, opens PR |
+| 3 | **QA** | Read-only verification, E2E browser testing, requirements coverage matrix |
+| 4 | **Merge** | Waits for CI, squash-merges PR |
+| 5 | **Prod-QA** | Verifies feature is live in production (if PROD_URL set) |
 
----
+**Key behaviors:**
+- QA failure triggers Dev retry with fix list (max 3 cycles)
+- Each agent posts structured comments on the GitHub issue
+- On success: worktree cleaned up, issue closed
+- On failure: worktree preserved for manual inspection, `blocked` label added
 
-### `/execute` — Implement from Plan
-**Usage**: `/execute .claude/plans/phase-1-feature.md`
-**User interaction**: None
+## Architecture
 
-Autonomously implements a plan file.
+Each agent runs as a **separate `claude -p` process** with its own fresh context window. No shared memory. Agents communicate through:
 
-**What happens:**
-1. Reads entire plan + all referenced files
-2. Creates feature branch
-3. Executes tasks in dependency order
-4. Implements tests
-5. Runs 4-level validation (syntax -> unit -> integration -> E2E)
-6. Max 3 retries per validation failure
+1. **Sentinel files** — `.claude-workflow/*.done` and `*.report` in the worktree
+2. **GitHub issue comments** — structured audit trail with `[role]` prefixes
 
----
+```
+/impl #42
+  → Create worktree (.worktrees/issue-42/)
+  → Orchestrator: read issue → create plan
+  → Dev: implement + test → open PR
+  → QA: verify (read-only) → pass/fail
+     └─ if FAIL → Dev retry with fix list (max 3x)
+  → Merge: CI gate → squash-merge
+  → Prod-QA: verify deployment (optional)
+  → Cleanup worktree
+```
 
-### `/verify` — QA Gate
-**Usage**: `/verify` or `/verify .claude/plans/phase-1-feature.md`
-**User interaction**: None
+## Skills
 
-Proves every acceptance criterion with evidence. "Assume nothing. Prove everything."
-
-**What happens:**
-1. Builds Requirements Coverage Matrix (Met/Not Met/Unverified for each criterion)
-2. Runs full test suite
-3. E2E verification (browser for web, API calls for backends, CLI for tools)
-4. Security spot-check
-5. Issues verdict: **PASS**, **PASS-WITH-NITS**, or **FAIL**
-6. Comments on GitHub issue with evidence
-
----
-
-### `/commit` — Git Commit
-**Usage**: `/commit`
-**User interaction**: None
-
-Creates an atomic commit with conventional commit format and pushes to feature branch.
-
----
-
-### `/ship` — Full Autonomous Pipeline
-**Usage**: `/ship "Phase 1"` or `/ship #42`
-**User interaction**: None
-
-The master orchestrator. Runs the complete cycle for one PRD phase.
-
-**What happens:**
-1. Reads project context (CLAUDE.md, PRD, git state)
-2. Creates feature branch
-3. Plans the feature (`/plan-feature`)
-4. Implements it (`/execute`)
-5. Verifies it (`/verify`) — max 3 fix-verify cycles
-6. Commits and pushes (`/commit`)
-7. Opens PR on GitHub (references Task issue)
-8. Captures learnings
-9. Reports results and suggests next phase
-
----
-
-### `/learnings` — Institutional Knowledge
-**Usage**: `/learnings capture` or `/learnings review`
-**User interaction**: Minimal
-
-Captures and reviews insights that improve the system over time.
-
-**Capture mode**: Logs insights as JSON to `.claude/learnings/`
-**Review mode**: Summarizes all learnings, suggests CLAUDE.md promotions
-
----
-
-## Skills Reference
-
-Skills are specialized capabilities used by commands. You typically don't invoke them directly.
+Skills are specialized capabilities used by agents. You don't invoke them directly.
 
 | Skill | Purpose | Used By |
 |-------|---------|---------|
-| `requirements-clarity` | 0-100 scoring rubric for requirement clarity | `/create-prd` |
-| `question-bank` | Structured question categories (A-G) for PRD interrogation | `/create-prd` |
-| `agent-browser` | Browser automation for testing (navigate, click, fill, screenshot) | `/verify`, `/e2e-test` |
-| `e2e-test` | Comprehensive E2E testing with parallel research sub-agents | Standalone (`/e2e-test`) |
-| `agent-learnings` | JSON-based institutional knowledge capture | `/ship`, `/learnings` |
+| `requirements-clarity` | 0-100 clarity scoring rubric | `/create-prd` |
+| `question-bank` | Structured question categories (A-G) | `/create-prd` |
+| `agent-browser` | Browser automation (navigate, click, fill, screenshot) | QA, Prod-QA agents |
+| `e2e-test` | E2E testing with parallel research sub-agents | QA, Dev agents |
+| `agent-learnings` | JSON institutional knowledge capture | All agents |
 
-## Quality Gates
+## Configuration
 
-| Gate | Threshold | What Happens if Failed |
-|------|-----------|----------------------|
-| PRD Clarity Score | >= 90/100 | More questions asked (no limit) |
-| Plan Confidence | >= 7/10 | Identifies missing context |
-| Validation Commands | Must all pass | Max 3 retries, then documents issue |
-| QA Verdict | Must be PASS | Fix list generated, re-verify (max 3 cycles) |
-| Security Check | No critical vulns | Flagged and fixed |
-| Ship Cycle Limit | Max 3 verify-fix cycles | Stop, report to user |
-
-## How It Adapts to Any Tech Stack
-
-This system makes **zero assumptions** about your technology:
-
-- **init-project** reads the PRD and scaffolds accordingly (Next.js, Django, Rust, Go, etc.)
-- **create-rules** detects your project type from config files
-- **plan-feature** discovers patterns from your actual codebase
-- **verify** adapts testing approach (browser for web, API calls for backends, CLI for tools)
-- **question-bank** conditionally asks data model questions only if persistence is needed, UX questions only if user-facing
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `AGENT_TIMEOUT` | `600` (10 min) | Seconds before an agent is killed |
+| `AGENT_MAX_RETRIES` | `3` | Max Dev→QA retry cycles |
+| `PROD_URL` | (empty) | Production URL for Prod-QA verification |
 
 ## Project Structure
 
 ```
 .claude/
-├── commands/        # 9 workflow commands (invoked via /command-name)
-├── skills/          # 5 specialized capabilities (used by commands)
-├── templates/       # 3 structural templates (CLAUDE.md, PRD, plan)
-├── learnings/       # Auto-populated institutional knowledge (JSON)
-└── plans/           # Auto-populated feature plans (Markdown)
-```
-
-## Workflow Diagram
-
-```
-┌─────────────────────────────────────────┐
-│           USER INTERACTION ZONE          │
-│                                          │
-│  /create-prd ──> PRD.md + GitHub Epic    │
-│  (clarity scoring, structured questions) │
-│  (takes as long as needed)               │
-└──────────────────┬──────────────────────┘
-                   │
-                   v
-┌─────────────────────────────────────────┐
-│          SETUP ZONE (autonomous)         │
-│                                          │
-│  /init-project ──> scaffolded project    │
-│  /create-rules ──> CLAUDE.md             │
-└──────────────────┬──────────────────────┘
-                   │
-                   v
-┌─────────────────────────────────────────┐
-│     AUTONOMOUS SHIPPING ZONE             │
-│     (repeat per PRD phase)               │
-│                                          │
-│  /ship "Phase N"                         │
-│    ├─ branch ──> feat/phase-n-*          │
-│    ├─ plan   ──> .claude/plans/*.md      │
-│    ├─ execute ──> code + tests           │
-│    ├─ verify ──> PASS/FAIL               │
-│    │   └─ (max 3 fix cycles)             │
-│    ├─ commit ──> push to branch          │
-│    ├─ PR     ──> "Fixes #task-issue"     │
-│    └─ learn  ──> .claude/learnings/      │
-└─────────────────────────────────────────┘
+├── commands/           # 3 slash commands (user-facing)
+│   ├── create-prd.md   # PRD generation with structured interrogation
+│   ├── init-project.md # Scaffold + CLAUDE.md + AGENTS.md generation
+│   └── impl.md         # Multi-agent pipeline orchestrator
+├── agents/             # 5 agent system prompts (passed to claude -p)
+│   ├── orchestrator.md
+│   ├── dev-agent.md
+│   ├── qa-agent.md
+│   ├── merge-agent.md
+│   └── prod-qa-agent.md
+├── skills/             # 5 reusable capabilities
+│   ├── agent-browser/
+│   ├── agent-learnings/
+│   ├── e2e-test/
+│   ├── question-bank/
+│   └── requirements-clarity/
+├── templates/          # 4 document templates
+│   ├── CLAUDE-template.md
+│   ├── AGENTS-template.md
+│   ├── PRD-template.md
+│   └── plan-template.md
+├── learnings/          # Auto-populated knowledge base (JSON)
+└── plans/              # Auto-populated implementation plans
 ```
 
 ## Design Principles
 
-1. **PRD is the bottleneck by design** — the only place requiring user input. Thoroughness here prevents issues downstream.
-2. **Context is King** — plans are so information-dense that execution succeeds in one pass.
-3. **Prove everything, assume nothing** — no feature ships without proven acceptance criteria.
-4. **Self-improving** — the system captures learnings and refines its own rules over time.
-5. **Iteration limits** — max 3 automated fix cycles per feature to prevent security degradation (research shows 37.6% vulnerability increase after 5+ iterations).
-6. **Universal** — no tech-stack assumptions. Everything detected at runtime from the PRD.
+1. **PRD is the bottleneck by design** — the only human touchpoint. Thoroughness here prevents issues downstream.
+2. **Process isolation** — each agent gets a fresh context window. No inherited biases or stale state.
+3. **Prove everything, assume nothing** — QA produces a Requirements Coverage Matrix with evidence for every criterion.
+4. **Fail safely** — on failure, worktrees are preserved, GitHub issues are labeled `blocked`, and detailed recovery instructions are posted.
+5. **Universal** — zero tech-stack assumptions. Everything detected at runtime from the PRD and codebase analysis.
+6. **Self-improving** — agents capture learnings as JSON, building institutional knowledge across issues.
