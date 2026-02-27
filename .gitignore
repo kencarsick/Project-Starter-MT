@@ -3,6 +3,12 @@
 .env.local
 .env.*.local
 
+# Worktrees (per-issue isolated workspaces)
+.worktrees/
+
+# Agent workflow sentinel files
+.claude-workflow/
+
 # OS files
 .DS_Store
 Thumbs.db
