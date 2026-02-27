@@ -1,3 +1,8 @@
+# Project-specific generated files (created by /init-project and /create-prd)
+CLAUDE.md
+AGENTS.md
+PRD.md
+
 # Environment
 .env
 .env.local
