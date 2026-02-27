@@ -130,7 +130,9 @@ Agent invocation pattern:
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "<task-specific prompt>" \
-  --system-prompt-file /tmp/agent-<agent>-issue-<N>.md
+  --system-prompt-file /tmp/agent-<agent>-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 If the command exits with a non-zero status (timeout or crash), treat as STUCK — write the appropriate `.done` sentinel and proceed to failure handling.
@@ -153,7 +155,9 @@ QA_REPORT_CONTENT=""
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Read GitHub issue #<N> and create an implementation plan. Follow your system prompt instructions exactly." \
-  --system-prompt-file /tmp/agent-orchestrator-issue-<N>.md
+  --system-prompt-file /tmp/agent-orchestrator-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/orchestrator.done`:
@@ -173,7 +177,9 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Implement issue #<N> per the orchestrator plan. Follow your system prompt instructions exactly." \
-  --system-prompt-file /tmp/agent-dev-issue-<N>.md
+  --system-prompt-file /tmp/agent-dev-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix list.
@@ -195,7 +201,9 @@ On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix l
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify the implementation for issue #<N>. Follow your system prompt instructions exactly." \
-  --system-prompt-file /tmp/agent-qa-issue-<N>.md
+  --system-prompt-file /tmp/agent-qa-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/qa.done`:
@@ -231,7 +239,9 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Merge the PR for issue #<N>. Follow your system prompt instructions exactly." \
-  --system-prompt-file /tmp/agent-merge-issue-<N>.md
+  --system-prompt-file /tmp/agent-merge-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/merge.done`:
@@ -259,7 +269,9 @@ To detect a SHA: check if the value matches `^[0-9a-f]{40}$`.
 cd "$WORKTREE_PATH" && \
 timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify issue #<N> is live in production. Follow your system prompt instructions exactly." \
-  --system-prompt-file /tmp/agent-prod-qa-issue-<N>.md
+  --system-prompt-file /tmp/agent-prod-qa-issue-<N>.md \
+  --dangerously-skip-permissions \
+  --max-turns ${AGENT_MAX_TURNS:-200}
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/prod-qa.done`:
@@ -408,6 +420,7 @@ Review the sentinel files in .worktrees/issue-<N>/.claude-workflow/ for details.
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_TIMEOUT` | `600` (10 min) | Seconds before an agent process is killed |
+| `AGENT_MAX_TURNS` | `200` | Max agentic turns per agent before auto-exit |
 | `AGENT_MAX_RETRIES` | `3` | Max Dev→QA retry cycles before halting |
 | `PROD_URL` | (empty) | Production URL for Prod-QA verification |
 
