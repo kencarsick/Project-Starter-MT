@@ -24,25 +24,6 @@ which claude || echo "FAIL: claude CLI not found"
 gh auth status || echo "FAIL: gh CLI not authenticated"
 ```
 
-### 1a2. Detect tmux
-
-Tmux mode is **on by default**. Check if disabled:
-1. If environment variable `IMPL_TMUX=0` is set, or
-2. If the user passes `--no-tmux` as part of `$ARGUMENTS`
-
-If tmux mode is enabled (default):
-```bash
-which tmux || echo "FAIL: tmux not found but IMPL_TMUX=1"
-```
-
-Create the tmux session for this pipeline run:
-```bash
-SESSION_NAME="impl-issue-<N>"
-tmux new-session -d -s "$SESSION_NAME" -n "pipeline"
-```
-
-The first window (`pipeline`) shows the orchestrator's `/impl` status output. Each agent gets its own named window.
-
 ### 1b. Verify project files
 
 Check that `CLAUDE.md` and `AGENTS.md` exist in the project root. If either is missing, abort:
@@ -134,49 +115,23 @@ Before each agent invocation, read the agent's system prompt file and substitute
 | `__PROD_URL__` | Production URL or empty string |
 | `__QA_REPORT__` | Empty string on first Dev run; contents of `qa.report` on retry |
 
-Substitution command pattern:
+Substitution command pattern — write the substituted prompt to a temp file:
 ```bash
-AGENT_PROMPT=$(cat .claude/agents/<agent>.md \
-  | sed "s|__ISSUE_NUM__|<N>|g" \
-  | sed "s|__WORKTREE_PATH__|$WORKTREE_PATH|g" \
-  | sed "s|__REPO__|$REPO|g" \
-  | sed "s|__PROD_URL__|$PROD_URL|g" \
-  | sed "s|__QA_REPORT__|$QA_REPORT_CONTENT|g")
+sed -e "s|__ISSUE_NUM__|<N>|g" \
+    -e "s|__WORKTREE_PATH__|$WORKTREE_PATH|g" \
+    -e "s|__REPO__|$REPO|g" \
+    -e "s|__PROD_URL__|$PROD_URL|g" \
+    -e "s|__QA_REPORT__|$QA_REPORT_CONTENT|g" \
+  .claude/agents/<agent>.md > /tmp/agent-<agent>-issue-<N>.md
 ```
 
 Agent invocation pattern:
-
-**Important**: Claude Code blocks nested sessions by default. All `claude -p` invocations MUST unset the `CLAUDECODE` environment variable:
-
-**Without tmux**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "<task-specific prompt>" \
-  --system-prompt "$AGENT_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-<agent>-issue-<N>.md
 ```
-
-**With tmux** (default):
-```bash
-WINDOW_NAME="<agent-role>"  # e.g., "orchestrator", "dev", "qa", "merge", "prod-qa"
-tmux new-window -t "$SESSION_NAME" -n "$WINDOW_NAME"
-tmux send-keys -t "$SESSION_NAME:$WINDOW_NAME" \
-  "unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p '<task-specific prompt>' --system-prompt \"\$AGENT_PROMPT\" -C \"$WORKTREE_PATH\"; exit" Enter
-```
-
-Then wait for the agent to finish by polling for the sentinel file:
-```bash
-while [ ! -f "$WORKTREE_PATH/.claude-workflow/<agent-role>.done" ]; do
-  sleep 5
-done
-```
-
-This gives each agent its own visible tmux window. The user can attach to the session to watch all agents:
-```bash
-tmux attach -t impl-issue-<N>
-```
-
-Use `Ctrl-b n` / `Ctrl-b p` to switch between agent windows.
 
 If the command exits with a non-zero status (timeout or crash), treat as STUCK — write the appropriate `.done` sentinel and proceed to failure handling.
 
@@ -195,10 +150,10 @@ QA_REPORT_CONTENT=""
 
 **Invoke**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Read GitHub issue #<N> and create an implementation plan. Follow your system prompt instructions exactly." \
-  --system-prompt "$ORCHESTRATOR_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-orchestrator-issue-<N>.md
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/orchestrator.done`:
@@ -215,10 +170,10 @@ unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
 
 **Invoke**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Implement issue #<N> per the orchestrator plan. Follow your system prompt instructions exactly." \
-  --system-prompt "$DEV_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-dev-issue-<N>.md
 ```
 
 On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix list.
@@ -237,10 +192,10 @@ On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix l
 
 **Invoke**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify the implementation for issue #<N>. Follow your system prompt instructions exactly." \
-  --system-prompt "$QA_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-qa-issue-<N>.md
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/qa.done`:
@@ -273,10 +228,10 @@ unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
 
 **Invoke**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Merge the PR for issue #<N>. Follow your system prompt instructions exactly." \
-  --system-prompt "$MERGE_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-merge-issue-<N>.md
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/merge.done`:
@@ -301,10 +256,10 @@ To detect a SHA: check if the value matches `^[0-9a-f]{40}$`.
 
 **Invoke**:
 ```bash
-unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
+cd "$WORKTREE_PATH" && \
+timeout ${AGENT_TIMEOUT:-600} claude -p \
   "Verify issue #<N> is live in production. Follow your system prompt instructions exactly." \
-  --system-prompt "$PROD_QA_PROMPT" \
-  -C "$WORKTREE_PATH"
+  --system-prompt-file /tmp/agent-prod-qa-issue-<N>.md
 ```
 
 **Gate** — read `$WORKTREE_PATH/.claude-workflow/prod-qa.done`:
@@ -322,21 +277,14 @@ unset CLAUDECODE && timeout ${AGENT_TIMEOUT:-600} claude -p \
 
 Only reached when all stages pass.
 
-### 5a. Cleanup tmux session (if active)
-
-If tmux mode was enabled:
-```bash
-tmux kill-session -t "impl-issue-<N>" 2>/dev/null
-```
-
-### 5b. Remove worktree
+### 5a. Remove worktree
 
 ```bash
 git worktree remove .worktrees/issue-<N> --force
 git branch -d issue-<N> 2>/dev/null
 ```
 
-### 5c. Capture learnings
+### 5b. Capture learnings
 
 Write a JSON learning entry to `.claude/learnings/`:
 
@@ -353,7 +301,7 @@ cat > .claude/learnings/${TIMESTAMP}-issue-<N>.json << 'EOF'
 EOF
 ```
 
-### 5d. Post final summary to GitHub
+### 5c. Post final summary to GitHub
 
 ```bash
 gh issue comment <N> --repo "$REPO" --body "**[impl]** — Issue #<N>
@@ -375,7 +323,7 @@ All stages passed. Issue implemented, reviewed, merged, and verified.
 "
 ```
 
-### 5e. Display success report
+### 5d. Display success report
 
 ```
 ## Implementation Complete — Issue #<N>
@@ -462,7 +410,6 @@ Review the sentinel files in .worktrees/issue-<N>/.claude-workflow/ for details.
 | `AGENT_TIMEOUT` | `600` (10 min) | Seconds before an agent process is killed |
 | `AGENT_MAX_RETRIES` | `3` | Max Dev→QA retry cycles before halting |
 | `PROD_URL` | (empty) | Production URL for Prod-QA verification |
-| `IMPL_TMUX` | `1` (on) | Set to `0` to run agents headlessly without tmux windows |
 
 ---
 
@@ -472,18 +419,17 @@ Review the sentinel files in .worktrees/issue-<N>/.claude-workflow/ for details.
 /impl #<N>
 │
 ├── Preflight checks
-├── Detect tmux (if IMPL_TMUX=1, create session "impl-issue-<N>")
 ├── Create worktree (.worktrees/issue-<N>/)
 │
-├── Stage 1: Orchestrator  [tmux window: "orchestrator"]
+├── Stage 1: Orchestrator
 │   ├── DONE → continue
 │   └── STUCK → halt
 │
-├── Stage 2: Dev (attempt 1)          [tmux window: "dev"]
+├── Stage 2: Dev (attempt 1)
 │   ├── DONE → continue
 │   └── STUCK → halt
 │
-├── Stage 3: QA                        [tmux window: "qa"]
+├── Stage 3: QA
 │   ├── PASS / PASS-WITH-NITS → continue
 │   └── FAIL → retry (up to MAX_RETRIES)
 │       ├── Dev retry (with QA fix list)
@@ -491,35 +437,17 @@ Review the sentinel files in .worktrees/issue-<N>/.claude-workflow/ for details.
 │       └── ... (max 3 cycles)
 │           └── All failed → halt
 │
-├── Stage 4: Merge                     [tmux window: "merge"]
+├── Stage 4: Merge
 │   ├── SHA → continue
 │   └── CI_FAILED / CONFLICT / BLOCKED / NO_PR → halt
 │
-├── Stage 5: Prod-QA (if PROD_URL set) [tmux window: "prod-qa"]
+├── Stage 5: Prod-QA (if PROD_URL set)
 │   ├── PASS → continue
 │   └── FAIL / DEPLOY_TIMEOUT → halt
 │
 └── Cleanup
-    ├── Kill tmux session (if active)
     ├── Remove worktree
     ├── Capture learnings
     ├── Post summary to GitHub
     └── Display success report
 ```
-
-### tmux Usage
-
-When `IMPL_TMUX=1`, attach to the session from another terminal to watch agents work:
-
-```bash
-# Attach to the pipeline session
-tmux attach -t impl-issue-<N>
-
-# Navigation
-Ctrl-b n    # Next agent window
-Ctrl-b p    # Previous agent window
-Ctrl-b w    # List all windows
-Ctrl-b d    # Detach (pipeline keeps running)
-```
-
-Each window is named after its agent role: `pipeline`, `orchestrator`, `dev`, `qa`, `merge`, `prod-qa`.
