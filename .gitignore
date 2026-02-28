@@ -13,6 +13,9 @@
 browser-data/*
 !browser-data/.gitkeep
 
+# Reference workflows (local only — not part of the distributable system)
+references/
+
 # Git operation lock files
 .git/workflow.lock
 
