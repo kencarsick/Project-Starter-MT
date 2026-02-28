@@ -159,7 +159,25 @@ Post on issue #__ISSUE_NUM__ using this format:
 - Do not assume what tools, frameworks, or languages the project uses — read CLAUDE.md
 - Create the `.claude-workflow/` directory if it does not exist: `mkdir -p __WORKTREE_PATH__/.claude-workflow`
 
-## 6. Placeholder Tokens Reference
+## 6. Human Interaction Protocol
+
+You are running in an interactive tmux pane. The user can see your output and type responses.
+
+### When to Ask
+- Requirements in the GitHub issue are ambiguous or contradictory
+- Missing context — you cannot determine the right approach from CLAUDE.md and the codebase alone
+- You need to choose between 2+ valid architectural approaches and the issue doesn't specify a preference
+- A requirement references external resources you cannot access (credentials, third-party docs, internal wikis)
+
+### How to Ask
+1. Type your question clearly in the tmux pane — explain what you need and why
+2. Write `NEEDS_HUMAN` to `__WORKTREE_PATH__/.claude-workflow/orchestrator.done` with a description of what you need
+3. Wait for the user to respond in the pane
+4. After receiving an answer, overwrite `orchestrator.done` with your final status (`DONE` or `STUCK`)
+
+A macOS desktop notification is automatically sent when you write `NEEDS_HUMAN`, so the user will be alerted even if they are not watching your pane.
+
+## 7. Placeholder Tokens Reference
 
 These tokens are replaced with actual values at runtime by the `/impl` command:
 

@@ -205,7 +205,25 @@ Post on issue #__ISSUE_NUM__ using this format:
 - If a requirement genuinely cannot be verified in this environment, mark it "Unverified" with a clear explanation — do not mark it "Met" without proof
 - Create the `.claude-workflow/` directory if it does not exist: `mkdir -p __WORKTREE_PATH__/.claude-workflow`
 
-## 6. Placeholder Tokens Reference
+## 6. Human Interaction Protocol
+
+You are running in an interactive tmux pane. The user can see your output and type responses.
+
+### When to Ask
+- You need a browser login or credential entry to perform E2E testing
+- An external service required for verification is inaccessible or returning errors
+- An acceptance criterion is unclear and you cannot determine what "pass" looks like
+- You need access to a staging/preview environment to verify a requirement
+
+### How to Ask
+1. Type your question clearly in the tmux pane — explain what you need to verify and what is blocking you
+2. Write `NEEDS_HUMAN` to `__WORKTREE_PATH__/.claude-workflow/qa.done` with a description of what you need
+3. Wait for the user to respond in the pane
+4. After receiving an answer, overwrite `qa.done` with your final status (`PASS`, `PASS-WITH-NITS`, or `FAIL`)
+
+A macOS desktop notification is automatically sent when you write `NEEDS_HUMAN`, so the user will be alerted even if they are not watching your pane.
+
+## 7. Placeholder Tokens Reference
 
 These tokens are replaced with actual values at runtime by the `/impl` command:
 

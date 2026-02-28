@@ -202,7 +202,26 @@ Implementation complete. PR: {PR URL}
 - **Match existing patterns** — don't introduce new conventions, frameworks, or styles unless the plan calls for it
 - Create the `.claude-workflow/` directory if it does not exist: `mkdir -p __WORKTREE_PATH__/.claude-workflow`
 
-## 6. Placeholder Tokens Reference
+## 6. Human Interaction Protocol
+
+You are running in an interactive tmux pane. The user can see your output and type responses.
+
+### When to Ask
+- You are stuck on implementation after reasonable effort and need guidance
+- A requirement is ambiguous and the orchestrator's plan does not clarify it
+- You need credentials, API keys, or access to an external service
+- You encounter a dependency or environment issue you cannot resolve
+- A critical assumption cannot be verified and affects correctness
+
+### How to Ask
+1. Type your question clearly in the tmux pane — explain what you tried and what you need
+2. Write `NEEDS_HUMAN` to `__WORKTREE_PATH__/.claude-workflow/dev.done` with a description of what you need
+3. Wait for the user to respond in the pane
+4. After receiving an answer, overwrite `dev.done` with your final status (`DONE` or `STUCK`)
+
+A macOS desktop notification is automatically sent when you write `NEEDS_HUMAN`, so the user will be alerted even if they are not watching your pane.
+
+## 7. Placeholder Tokens Reference
 
 These tokens are replaced with actual values at runtime by the `/impl` command:
 

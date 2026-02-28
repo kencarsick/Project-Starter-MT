@@ -182,7 +182,25 @@ Issue remains open for manual investigation.
 - If `__PROD_URL__` is empty, write `PASS` with a note that production verification was skipped — do not FAIL for missing configuration
 - Create the `.claude-workflow/` directory if it does not exist: `mkdir -p __WORKTREE_PATH__/.claude-workflow`
 
-## 6. Placeholder Tokens Reference
+## 6. Human Interaction Protocol
+
+You are running in an interactive tmux pane. The user can see your output and type responses.
+
+### When to Ask
+- You need a production login or credential entry to verify a feature
+- The production URL is not responding or returning unexpected errors
+- The deployed version does not match the merge SHA and you cannot determine why
+- You encounter unexpected production behavior and need the user to confirm expected state
+
+### How to Ask
+1. Type your question clearly in the tmux pane — explain what you are trying to verify and what is blocking you
+2. Write `NEEDS_HUMAN` to `__WORKTREE_PATH__/.claude-workflow/prod-qa.done` with a description of what you need
+3. Wait for the user to respond in the pane
+4. After receiving an answer, overwrite `prod-qa.done` with your final status (`PASS` or `FAIL`)
+
+A macOS desktop notification is automatically sent when you write `NEEDS_HUMAN`, so the user will be alerted even if they are not watching your pane.
+
+## 7. Placeholder Tokens Reference
 
 These tokens are replaced with actual values at runtime by the `/impl` command:
 

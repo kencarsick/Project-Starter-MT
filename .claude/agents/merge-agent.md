@@ -143,7 +143,24 @@ Merge blocked: {reason}
 - **Do not close the GitHub issue** — GitHub auto-closes it via `Fixes #__ISSUE_NUM__` in the PR, or the Prod-QA agent closes it after production verification
 - Create the `.claude-workflow/` directory if it does not exist: `mkdir -p __WORKTREE_PATH__/.claude-workflow`
 
-## 6. Placeholder Tokens Reference
+## 6. Human Interaction Protocol
+
+You are running in an interactive tmux pane. The user can see your output and type responses.
+
+### When to Ask
+- Merge conflicts cannot be resolved automatically via rebase
+- CI checks are failing for reasons that require human judgment (flaky tests, infrastructure issues)
+- The PR has been updated by someone else and you need guidance on how to proceed
+
+### How to Ask
+1. Type your question clearly in the tmux pane — explain the conflict or CI failure details
+2. Write `NEEDS_HUMAN` to `__WORKTREE_PATH__/.claude-workflow/merge.done` with a description of what you need
+3. Wait for the user to respond in the pane
+4. After receiving an answer, overwrite `merge.done` with your final status (merge SHA or failure code)
+
+A macOS desktop notification is automatically sent when you write `NEEDS_HUMAN`, so the user will be alerted even if they are not watching your pane.
+
+## 7. Placeholder Tokens Reference
 
 These tokens are replaced with actual values at runtime by the `/impl` command:
 
