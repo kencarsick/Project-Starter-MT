@@ -128,7 +128,7 @@ sed -e "s|__ISSUE_NUM__|<N>|g" \
 Agent invocation pattern:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "<task-specific prompt>" \
   --system-prompt-file /tmp/agent-<agent>-issue-<N>.md \
   --dangerously-skip-permissions \
@@ -153,7 +153,7 @@ QA_REPORT_CONTENT=""
 **Invoke**:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "Read GitHub issue #<N> and create an implementation plan. Follow your system prompt instructions exactly." \
   --system-prompt-file /tmp/agent-orchestrator-issue-<N>.md \
   --dangerously-skip-permissions \
@@ -175,7 +175,7 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 **Invoke**:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "Implement issue #<N> per the orchestrator plan. Follow your system prompt instructions exactly." \
   --system-prompt-file /tmp/agent-dev-issue-<N>.md \
   --dangerously-skip-permissions \
@@ -199,7 +199,7 @@ On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix l
 **Invoke**:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "Verify the implementation for issue #<N>. Follow your system prompt instructions exactly." \
   --system-prompt-file /tmp/agent-qa-issue-<N>.md \
   --dangerously-skip-permissions \
@@ -237,7 +237,7 @@ timeout ${AGENT_TIMEOUT:-600} claude -p \
 **Invoke**:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "Merge the PR for issue #<N>. Follow your system prompt instructions exactly." \
   --system-prompt-file /tmp/agent-merge-issue-<N>.md \
   --dangerously-skip-permissions \
@@ -267,7 +267,7 @@ To detect a SHA: check if the value matches `^[0-9a-f]{40}$`.
 **Invoke**:
 ```bash
 cd "$WORKTREE_PATH" && \
-timeout ${AGENT_TIMEOUT:-600} claude -p \
+timeout ${AGENT_TIMEOUT:-600} env -u CLAUDECODE claude -p \
   "Verify issue #<N> is live in production. Follow your system prompt instructions exactly." \
   --system-prompt-file /tmp/agent-prod-qa-issue-<N>.md \
   --dangerously-skip-permissions \
