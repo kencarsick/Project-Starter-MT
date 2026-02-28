@@ -154,7 +154,9 @@ Record the epic issue number.
 
 ### Create TASK Issues (one per Implementation Phase)
 
-For each phase in Section 14:
+**Important**: Track each created issue number as you go. You'll need them for the `Depends on:` lines and the final E2E task.
+
+For each phase in Section 14, create a task issue and record its number:
 
 ```bash
 gh issue create \
@@ -184,9 +186,14 @@ gh issue create \
 \`\`\`
 
 ## Dependencies
-{List prior phases that must be completed first, or \"None\" for Phase 1}
+Depends on: #{prior-task-issue-numbers}
 "
 ```
+
+**Dependency rules** (the `Depends on:` line is parsed by the DAG resolver in `scripts/lib/dag.sh`):
+- **Phase 1** (no prior phases): omit the `## Dependencies` section entirely, or write `Depends on: None`
+- **Phase 2+**: reference the issue numbers of all phases that must complete first, e.g., `Depends on: #2` or `Depends on: #2, #3`
+- Use the **actual GitHub issue numbers** returned by `gh issue create`, not phase numbers
 
 ### Create Final TASK
 
@@ -220,9 +227,11 @@ gh issue list --label \"type:task\" --state open
 \`\`\`
 
 ## Dependencies
-All Phase {1..N} tasks must be complete
+Depends on: #{task-1}, #{task-2}, ..., #{task-N}
 "
 ```
+
+Use the actual issue numbers from all phase tasks created above.
 
 ### Update EPIC with Checklist
 

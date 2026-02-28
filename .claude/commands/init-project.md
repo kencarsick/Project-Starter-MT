@@ -207,12 +207,73 @@ Fill all placeholder values with project-specific information extracted during S
 
 Write `AGENTS.md` to project root.
 
-### 12. Final Commit + Report
+### 12. Copy Pipeline Infrastructure
 
-Commit the generated documentation:
+Copy the multi-agent pipeline system into the project so it can run `impl.sh` autonomously.
+
+**Copy these from the Project Starter source:**
+
+1. **`scripts/`** — all top-level scripts and the `lib/` directory:
+   ```bash
+   cp -r /path/to/project-starter/scripts/ scripts/
+   chmod +x scripts/*.sh
+   ```
+
+2. **`.claude/workflow.yaml`** — pipeline configuration with sensible defaults:
+   ```yaml
+   pipeline:
+     stages:
+       - orchestrator
+       - dev
+       - qa
+       - merge
+       - prod-qa
+     max_retries: 3
+     max_turns_per_agent: 200
+
+   tmux:
+     layout: tiled
+
+   notifications:
+     enabled: true
+     sound: default
+
+   worktree:
+     base_dir: .worktrees
+     lock_timeout: 60
+     symlink_candidates:
+       - node_modules
+       - .env
+       - browser-data
+
+   github:
+     labels:
+       in_progress: "agent:in-progress"
+       blocked: "agent:blocked"
+       needs_human: "agent:needs-human"
+
+   sentinel:
+     poll_interval: 5
+
+   prod_url: ""
+   ```
+
+3. **`.claude/agents/`** — all 5 agent role definitions (orchestrator.md, dev-agent.md, qa-agent.md, merge-agent.md, prod-qa-agent.md)
+
+4. **`.claude/skills/`** — all reusable capabilities (agent-browser, agent-learnings, e2e-test, question-bank, requirements-clarity)
+
+5. **`.claude/settings.local.json`** — restricted permissions for the orchestrator session
+
+6. **`.claude/templates/`** — document templates (CLAUDE-template.md, AGENTS-template.md, PRD-template.md, plan-template.md)
+
+**Note**: If `/path/to/project-starter/` is not available (e.g., the user doesn't have the Project Starter repo locally), generate the `scripts/` directory and `workflow.yaml` inline using the canonical versions from this repository. The agent definitions and skills are already in `.claude/` from the current session.
+
+### 13. Final Commit + Report
+
+Commit the generated documentation and pipeline infrastructure:
 ```bash
-git add CLAUDE.md AGENTS.md
-git commit -m "docs: generate CLAUDE.md and AGENTS.md from project analysis"
+git add CLAUDE.md AGENTS.md scripts/ .claude/workflow.yaml .claude/agents/ .claude/skills/ .claude/settings.local.json .claude/templates/
+git commit -m "chore: add CLAUDE.md, AGENTS.md, and pipeline infrastructure"
 ```
 
 If a remote was created in Step 8, push:
@@ -235,13 +296,19 @@ Report:
 **Git**: initialized with initial commit
 **CLAUDE.md**: generated from codebase analysis
 **AGENTS.md**: generated with project-specific agent rules
+**Pipeline**: scripts/ + workflow.yaml + agents + skills copied
 
 **Files created**:
 - CLAUDE.md
 - AGENTS.md
 - .env.example
+- scripts/ (impl.sh, run-all.sh, setup.sh, status.sh, login.sh, lib/)
+- .claude/workflow.yaml
+- .claude/agents/ (5 agent roles)
+- .claude/skills/ (5 capabilities)
+- .claude/settings.local.json
 - {config files}
 - {directory structure}
 
-Next step: `/impl #<issue-number>` to implement the first phase
+Next step: `./scripts/setup.sh` to verify prerequisites, then `./scripts/impl.sh #<issue-number>` to implement the first phase
 ```
