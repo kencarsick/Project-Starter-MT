@@ -49,7 +49,7 @@ Use `.claude/skills/question-bank/SKILL.md` for systematic questioning.
 
 - **Multiple-choice format** for every question: `1a, 2c, 3b + note`
 - **2-4 questions per round**, targeting highest-impact gaps
-- **7 categories** with applicability rules:
+- **8 categories** with applicability rules:
 
 | Category | When to Ask |
 |----------|-------------|
@@ -60,6 +60,7 @@ Use `.claude/skills/question-bank/SKILL.md` for systematic questioning.
 | E) Failure Modes & Safety | Always |
 | F) Technology Preferences | Always |
 | G) User Experience | Only if user-facing app |
+| H) Manual Prerequisites | Only if external services, browser automation, or user-provided assets involved |
 
 ### Anti-Vagueness Enforcement
 
@@ -109,7 +110,7 @@ Once enough context is gathered (score approaching 80+):
 
 ## Phase 5: PRD Generation
 
-Read `.claude/templates/PRD-template.md` and fill in all 16 sections:
+Read `.claude/templates/PRD-template.md` and fill in all 17 sections:
 
 1. **Executive Summary** — 2-3 paragraphs: core value prop, what it does, MVP goal
 2. **Mission & Core Principles** — mission statement + 3-5 principles
@@ -120,13 +121,14 @@ Read `.claude/templates/PRD-template.md` and fill in all 16 sections:
 7. **Features** — detailed specs per feature: routes, UI, data flows
 8. **Technology Stack** — table: Technology | Version | Purpose
 9. **Security & Configuration** — auth, env vars, rate limiting
-10. **Data Model** — full schema: tables, columns, types, relationships, indexes
-11. **API/Interface Specification** — all endpoints with request/response formats
-12. **Success Criteria** — measurable pass/fail conditions
-13. **Implementation Phases** — 3-5 phases with goals, deliverables ✅, acceptance criteria (pass/fail), validation commands
-14. **Future Considerations** — post-MVP enhancements
-15. **Risks & Mitigations** — 3-5 key risks in table format
-16. **Appendix** — key deps with doc links, reference implementations
+10. **Manual Prerequisites** — external service access, manual setup steps, assets the user must provide
+11. **Data Model** — full schema: tables, columns, types, relationships, indexes
+12. **API/Interface Specification** — all endpoints with request/response formats
+13. **Success Criteria** — measurable pass/fail conditions
+14. **Implementation Phases** — 3-5 phases with goals, deliverables ✅, acceptance criteria (pass/fail), validation commands
+15. **Future Considerations** — post-MVP enhancements
+16. **Risks & Mitigations** — 3-5 key risks in table format
+17. **Appendix** — key deps with doc links, reference implementations
 
 **Each Implementation Phase MUST include:**
 - Specific, measurable acceptance criteria with pass/fail conditions
@@ -152,7 +154,7 @@ Record the epic issue number.
 
 ### Create TASK Issues (one per Implementation Phase)
 
-For each phase in Section 13:
+For each phase in Section 14:
 
 ```bash
 gh issue create \
@@ -251,7 +253,7 @@ Update the EPIC issue body to include a checklist linking to all TASK issues:
 
 **Clarity Score**: {score}/100
 **Clarification Rounds**: {count}
-**Sections**: 16/16 complete
+**Sections**: 17/17 complete
 **Implementation Phases**: {count}
 
 **GitHub Issues Created**:

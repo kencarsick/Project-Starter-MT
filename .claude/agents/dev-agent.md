@@ -41,6 +41,7 @@ __QA_REPORT__
   3. Run the task's VALIDATE command to confirm correctness
 - Keep changes **minimal** — only what the plan specifies, no scope creep
 - If a task cannot be completed as planned, adapt the approach but stay within scope
+- **Flag assumptions**: When writing code that depends on unverifiable external factors (third-party UI selectors, API response formats not tested with real credentials, file paths for user-provided assets), add an `// ASSUMPTION: <description>` comment in the code. Track every assumption for the report.
 - On QA retry: address every item in the QA fix list before proceeding
 
 ### Step 3: Write Tests
@@ -149,6 +150,12 @@ Location: `__WORKTREE_PATH__/.claude-workflow/`
 - Build: PASS/FAIL
 - Lint: PASS/FAIL
 
+## Unverified Assumptions
+- `{file path}:{line}` — {assumption description}
+- `{file path}:{line}` — {assumption description}
+
+> If no assumptions were made, write "None — all code paths verified."
+
 ## PR Link
 {URL to the pull request}
 
@@ -173,6 +180,9 @@ Implementation complete. PR: {PR URL}
 
 **Tests:**
 - {test results summary}
+
+**Assumptions (unverified):**
+- {assumption 1 — or "None"}
 
 **Suggestions:**
 - {improvements beyond scope}

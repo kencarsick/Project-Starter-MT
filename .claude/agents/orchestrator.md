@@ -29,6 +29,8 @@ Read these files and sources in order:
 - Number every acceptance criterion: AC1, AC2, AC3, ...
 - If any requirement is ambiguous, note your interpretation explicitly as an assumption
 - Separate functional requirements from non-functional requirements
+- Flag requirements that need human action (manual logins, providing credentials, uploading assets, verifying against live UIs) as `Human-Required`
+- Check the PRD's "Manual Prerequisites" section (Section 10) for known human dependencies
 
 ### Step 2: Codebase Analysis
 
@@ -53,6 +55,11 @@ Write a structured plan with these sections:
    - **VALIDATE**: A command to verify the task is done correctly (e.g., `npm test`, `grep -q "expected" file.ts`, etc.)
 5. **Testing Strategy** — what tests to write, what commands to run, expected coverage
 6. **Risk Assessment** — edge cases, potential regressions, things to watch out for
+7. **Human-Required Steps** — actions that cannot be automated and must be performed by the user before or after the pipeline runs. Each step must include:
+   - **STEP N**: Clear description of what the user must do
+   - **WHEN**: Before implementation / After merge / Before first run
+   - **REASON**: Why this can't be automated
+   - If none exist, write "None — fully automatable."
 
 ### Step 4: Post Plan to GitHub
 
@@ -85,10 +92,11 @@ Location: `__WORKTREE_PATH__/.claude-workflow/`
 {1-2 sentence summary of the issue and planned approach}
 
 ## Requirements
-| # | Requirement | Type |
-|---|------------|------|
-| R1 | {requirement text} | Functional |
-| AC1 | {acceptance criterion} | Acceptance |
+| # | Requirement | Type | Automatable? |
+|---|------------|------|-------------|
+| R1 | {requirement text} | Functional | Yes |
+| R2 | {requirement text} | Functional | No — requires manual login |
+| AC1 | {acceptance criterion} | Acceptance | Yes |
 
 ## Implementation Plan
 
@@ -111,6 +119,13 @@ Location: `__WORKTREE_PATH__/.claude-workflow/`
 
 ## Risk Assessment
 {Edge cases, potential regressions}
+
+## Human-Required Steps
+| # | Step | When | Reason |
+|---|------|------|--------|
+| H1 | {description} | {Before implementation / After merge / Before first run} | {why it can't be automated} |
+
+> If none exist, write "None — fully automatable."
 
 ## Suggestions
 {Improvements beyond the immediate requirements}

@@ -162,7 +162,32 @@
 
 ---
 
-## 10. Data Model
+## 10. Manual Prerequisites
+
+Steps that require human action — these cannot be automated by the agent pipeline.
+
+### External Service Access
+
+| Service | What's Needed | When |
+|---------|--------------|------|
+| {service name} | {account, API key, OAuth setup, etc.} | {before Phase N / before first run} |
+
+### Manual Setup Steps
+
+1. {Step description — e.g., "Log into service X in the automation browser"}
+2. {Step description — e.g., "Add reference images to models/{name}/refs/"}
+
+### Assets to Provide
+
+| Asset | Location | Format | Purpose |
+|-------|----------|--------|---------|
+| {asset name} | {where it goes} | {file type} | {why it's needed} |
+
+> **Note**: If no manual prerequisites exist, write "None — this project is fully automatable."
+
+---
+
+## 11. Data Model
 
 ### {Table/Collection Name}
 
@@ -188,7 +213,7 @@
 
 ---
 
-## 11. API/Interface Specification
+## 12. API/Interface Specification
 
 ### `{METHOD} {/path}`
 
@@ -215,7 +240,7 @@
 
 ---
 
-## 12. Success Criteria
+## 13. Success Criteria
 
 ### Pass/Fail Conditions
 
@@ -230,7 +255,7 @@
 
 ---
 
-## 13. Implementation Phases
+## 14. Implementation Phases
 
 ### Phase 1: {Phase Goal}
 
@@ -271,7 +296,7 @@
 
 ---
 
-## 14. Future Considerations
+## 15. Future Considerations
 
 Post-MVP enhancements to consider:
 
@@ -281,7 +306,7 @@ Post-MVP enhancements to consider:
 
 ---
 
-## 15. Risks & Mitigations
+## 16. Risks & Mitigations
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
@@ -291,7 +316,7 @@ Post-MVP enhancements to consider:
 
 ---
 
-## 16. Appendix
+## 17. Appendix
 
 ### Key Dependencies
 

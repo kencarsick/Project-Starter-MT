@@ -17,7 +17,7 @@ Read `PRD.md` and extract:
 - **Directory Structure** (Section 6) — intended project layout
 - **Dependencies** — all packages/libraries listed
 - **Security & Configuration** (Section 9) — environment variables needed
-- **Data Model** (Section 10) — database type and schema
+- **Data Model** (Section 11) — database type and schema
 
 ### 2. Detect Project Type & Scaffold
 

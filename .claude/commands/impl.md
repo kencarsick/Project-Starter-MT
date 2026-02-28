@@ -168,6 +168,9 @@ env -u CLAUDECODE claude -p \
 | `STUCK` | Go to **Failure Escalation** with stage=`orchestrator`, reason from `orchestrator.report` |
 | Missing/other | Go to **Failure Escalation** with stage=`orchestrator`, reason=`"Agent exited without writing sentinel file"` |
 
+**Extract Human-Required Steps** — Parse `orchestrator.report` for the "## Human-Required Steps" section. Store the content as `HUMAN_STEPS_ORCHESTRATOR`. If the section exists and contains entries (not just "None"), display to user:
+> "Orchestrator identified human-required steps. These will be tracked after pipeline completion."
+
 ---
 
 ### Stage 2: Dev
@@ -191,6 +194,9 @@ On the first run, `__QA_REPORT__` is empty. On retries, it contains the QA fix l
 | `DONE` | Read `dev.report`, display summary, proceed to Stage 3 |
 | `STUCK` | Go to **Failure Escalation** with stage=`dev` |
 | Missing/other | Go to **Failure Escalation** with stage=`dev`, reason=`"Agent exited without writing sentinel file"` |
+
+**Extract Assumptions** — Parse `dev.report` for the "## Unverified Assumptions" section. Store the content as `HUMAN_STEPS_DEV`. If assumptions exist (not just "None"), display:
+> "Dev flagged unverified assumptions."
 
 ---
 
@@ -285,18 +291,80 @@ env -u CLAUDECODE claude -p \
 
 ---
 
-## Step 5: Cleanup (Success Path)
+## Step 5: Human Action Required Check
+
+After all stages pass, aggregate human-required items from the pipeline.
+
+### 5a. Collect human actions
+
+1. Read `$WORKTREE_PATH/.claude-workflow/orchestrator.report` — extract the "## Human-Required Steps" section content into `HUMAN_STEPS_ORCHESTRATOR`
+2. Read `$WORKTREE_PATH/.claude-workflow/dev.report` — extract the "## Unverified Assumptions" section content into `HUMAN_STEPS_DEV`
+3. Combine into `HUMAN_ACTIONS` — skip entries that say "None"
+
+### 5b. If HUMAN_ACTIONS is non-empty:
+
+#### Add label
+
+```bash
+gh issue edit <N> --repo "$REPO" --add-label "needs-human-action"
+```
+
+#### Post human action checklist to GitHub
+
+```bash
+gh issue comment <N> --repo "$REPO" --body "**[impl]** — Issue #<N>
+
+## Human Action Required
+
+The pipeline completed successfully, but the following items need manual attention before this feature is fully operational:
+
+### From Orchestrator Plan
+$HUMAN_STEPS_ORCHESTRATOR
+
+### From Dev (Unverified Assumptions)
+$HUMAN_STEPS_DEV
+
+---
+
+**Please complete the items above, then close this issue manually.**
+"
+```
+
+#### Keep issue open
+
+Do NOT close the issue. Do NOT remove the `needs-human-action` label. The issue stays open until the user completes the manual steps and closes it themselves.
+
+#### Display to user
+
+```
+## Human Action Required — Issue #<N>
+
+The pipeline completed (all stages passed), but these items need your attention:
+
+{numbered list of human actions from HUMAN_STEPS_ORCHESTRATOR and HUMAN_STEPS_DEV}
+
+The issue has been labeled `needs-human-action` and will remain open.
+Complete the items above, then close issue #<N> manually.
+```
+
+### 5c. If HUMAN_ACTIONS is empty:
+
+No human actions needed. Proceed directly to Cleanup (Step 6). The issue will be closed as normal.
+
+---
+
+## Step 6: Cleanup (Success Path)
 
 Only reached when all stages pass.
 
-### 5a. Remove worktree
+### 6a. Remove worktree
 
 ```bash
 git worktree remove .worktrees/issue-<N> --force
 git branch -d issue-<N> 2>/dev/null
 ```
 
-### 5b. Capture learnings
+### 6b. Capture learnings
 
 Write a JSON learning entry to `.claude/learnings/`:
 
@@ -313,7 +381,7 @@ cat > .claude/learnings/${TIMESTAMP}-issue-<N>.json << 'EOF'
 EOF
 ```
 
-### 5c. Post final summary to GitHub
+### 6c. Post final summary to GitHub
 
 ```bash
 gh issue comment <N> --repo "$REPO" --body "**[impl]** — Issue #<N>
@@ -335,7 +403,7 @@ All stages passed. Issue implemented, reviewed, merged, and verified.
 "
 ```
 
-### 5d. Display success report
+### 6d. Display success report
 
 ```
 ## Implementation Complete — Issue #<N>
@@ -347,24 +415,24 @@ All stages passed. Issue implemented, reviewed, merged, and verified.
 **Prod-QA**: {PASS|skipped}
 
 **Worktree**: cleaned up
-**GitHub**: issue #{N} closed, comments posted at each stage
+**GitHub**: $(if HUMAN_ACTIONS is empty: "issue #<N> closed" else "issue #<N> open — needs-human-action label added")
 
 Pipeline finished successfully.
 ```
 
 ---
 
-## Step 6: Failure Escalation
+## Step 7: Failure Escalation
 
 Reached when any stage fails terminally (STUCK, timeout, max retries, merge failure).
 
-### 6a. Add blocked label
+### 7a. Add blocked label
 
 ```bash
 gh issue edit <N> --repo "$REPO" --add-label "blocked"
 ```
 
-### 6b. Post failure comment
+### 7b. Post failure comment
 
 ```bash
 gh issue comment <N> --repo "$REPO" --body "**[impl]** — Issue #<N>
@@ -396,11 +464,11 @@ cat .claude-workflow/<stage>.report  # last agent report
 "
 ```
 
-### 6c. Preserve worktree
+### 7c. Preserve worktree
 
 Do NOT remove the worktree on failure. Leave `.worktrees/issue-<N>/` intact for manual inspection.
 
-### 6d. Display failure report
+### 7d. Display failure report
 
 ```
 ## Pipeline Failed — Issue #<N>
@@ -456,6 +524,10 @@ Review the sentinel files in .worktrees/issue-<N>/.claude-workflow/ for details.
 ├── Stage 5: Prod-QA (if PROD_URL set)
 │   ├── PASS → continue
 │   └── FAIL / DEPLOY_TIMEOUT → halt
+│
+├── Human Action Check
+│   ├── No human actions → close issue, continue to cleanup
+│   └── Has human actions → label issue, post checklist, keep open
 │
 └── Cleanup
     ├── Remove worktree
