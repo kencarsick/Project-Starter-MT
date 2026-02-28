@@ -1,8 +1,3 @@
-# Project-specific generated files (created by /init-project and /create-prd)
-CLAUDE.md
-AGENTS.md
-PRD.md
-
 # Environment
 .env
 .env.local
@@ -13,6 +8,13 @@ PRD.md
 
 # Agent workflow sentinel files
 .claude-workflow/
+
+# Browser session data (persistent login cookies — NEVER commit)
+browser-data/*
+!browser-data/.gitkeep
+
+# Git operation lock files
+.git/workflow.lock
 
 # OS files
 .DS_Store

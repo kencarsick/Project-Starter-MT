@@ -1,0 +1,47 @@
+# Universal Project Starter v2 — Pipeline Configuration
+# This file controls the behavior of the multi-agent pipeline.
+# Edit values to tune per-project. The bash scripts read this via scripts/lib/config.sh.
+
+pipeline:
+  stages:
+    - orchestrator
+    - dev
+    - qa
+    - merge
+    - prod-qa
+  max_retries: 3            # Dev→QA retry limit before halting
+  max_turns_per_agent: 200  # Safety cap — kills agent if exceeded
+
+tmux:
+  layout: tiled             # tmux layout for panes (tiled, even-horizontal, even-vertical)
+  pane_titles: true         # Show stage name in pane titles (ORCH #42, DEV #42, etc.)
+
+notifications:
+  enabled: true             # macOS desktop notifications via osascript
+  sound: true               # Play notification sound
+  repeat_interval: 30       # Seconds between repeat notifications for NEEDS_HUMAN
+
+worktree:
+  symlink_candidates:       # Directories/files to auto-symlink into worktrees
+    - .claude
+    - node_modules
+    - .env
+    - .env.local
+    - browser-data
+  lock_timeout: 60          # Seconds to wait for git operation lock
+
+github:
+  labels:
+    planning: "status:planning"
+    dev: "status:dev"
+    qa: "status:qa"
+    merging: "status:merging"
+    prod_qa: "status:prod-qa"
+    blocked: "status:blocked"
+    needs_human: "needs-human-action"
+
+sentinel:
+  poll_interval: 3          # Seconds between sentinel file checks
+  workflow_dir: ".claude-workflow"  # Sentinel directory name inside worktree
+
+prod_url: ""                # Production URL for Prod-QA verification (empty = skip Prod-QA)
