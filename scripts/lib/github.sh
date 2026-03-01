@@ -60,14 +60,6 @@ _resolve_label() {
   }
 }
 
-_ensure_label_exists() {
-  local label_name="$1"
-  if ! gh label list --json name --jq '.[].name' | grep -qx "$label_name" 2>/dev/null; then
-    gh label create "$label_name" --color "ededed" 2>/dev/null || true
-    log_debug "Created label '$label_name' on repo"
-  fi
-}
-
 set_label() {
   local issue_number="$1"
   local label_key="$2"
@@ -76,7 +68,9 @@ set_label() {
   local label_name
   label_name="$(_resolve_label "$label_key")"
 
-  _ensure_label_exists "$label_name"
+  # Create label if it doesn't exist (--force updates if it does)
+  gh label create "$label_name" --color "ededed" --force 2>/dev/null || true
+
   gh issue edit "$issue_number" --add-label "$label_name"
   log_debug "Added label '$label_name' to issue #$issue_number"
 }
