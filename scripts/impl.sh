@@ -390,25 +390,10 @@ launch_agent() {
   # Launch Claude in the pane
   tmux_send_keys "$TMUX_SESSION" "$pane_id" "cd ${WORKTREE_PATH} && claude --dangerously-skip-permissions"
 
-  # Wait for Claude CLI to fully start up and be ready for input
-  local max_wait=30
-  local waited=0
-  log_debug "Waiting for Claude CLI to start in pane $pane_id..."
-  while [[ "$waited" -lt "$max_wait" ]]; do
-    sleep 2
-    waited=$((waited + 2))
-    # Check if Claude is ready by looking for its prompt indicator in the pane
-    local pane_content
-    pane_content="$(tmux capture-pane -t "$pane_id" -p 2>/dev/null || echo "")"
-    if printf '%s' "$pane_content" | grep -qE '(>|❯|claude|How can I help|What would you like)' 2>/dev/null; then
-      log_debug "Claude CLI ready after ${waited}s"
-      break
-    fi
-  done
-
-  if [[ "$waited" -ge "$max_wait" ]]; then
-    log_warn "Claude CLI may not be ready after ${max_wait}s — sending prompt anyway"
-  fi
+  # Wait for Claude to fully start (needs time to load CLAUDE.md and show prompt)
+  local wait_secs=10
+  log_info "Waiting ${wait_secs}s for Claude to start..."
+  sleep "$wait_secs"
 
   # Send the initial task prompt
   local prompt
