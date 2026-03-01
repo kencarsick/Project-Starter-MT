@@ -310,5 +310,5 @@ Report:
 - {config files}
 - {directory structure}
 
-Next step: `./scripts/setup.sh` to verify prerequisites, then `./scripts/impl.sh #<issue-number>` to implement the first phase
+Next step: `./scripts/setup.sh` to verify prerequisites, then `./scripts/impl.sh '#<issue-number>'` to implement the first phase
 ```

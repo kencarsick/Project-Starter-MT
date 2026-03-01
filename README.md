@@ -51,12 +51,12 @@ claude
 /init-project
 
 # Step 3: Implement issues via multi-agent pipeline (autonomous with human interaction)
-./scripts/impl.sh #2
-./scripts/impl.sh #3
-./scripts/impl.sh #4
+./scripts/impl.sh '#2'
+./scripts/impl.sh '#3'
+./scripts/impl.sh '#4'
 
 # Or run all issues with dependency resolution
-./scripts/run-all.sh --epic #1
+./scripts/run-all.sh --epic '#1'
 ```
 
 ## Pipeline
@@ -77,13 +77,13 @@ Each issue runs through 5 stages in its own tmux session:
 - Desktop notifications fire when an agent needs your attention
 - QA failure triggers Dev retry with fix list (max 3 cycles)
 - All output logged to `.claude-workflow/logs/` for post-mortem
-- Resume failed pipelines: `./scripts/impl.sh #42 --from qa`
+- Resume failed pipelines: `./scripts/impl.sh '#42' --from qa`
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/impl.sh #N` | Run the 5-agent pipeline for a single issue |
+| `scripts/impl.sh '#N'` | Run the 5-agent pipeline for a single issue |
 | `scripts/run-all.sh` | Run all issues from an Epic with dependency resolution |
 | `scripts/setup.sh` | Verify all prerequisites are installed and configured |
 | `scripts/status.sh` | Check status of all running pipelines |
@@ -104,7 +104,7 @@ Edit `.claude/workflow.yaml` to tune pipeline behavior:
 ## Architecture
 
 ```
-./scripts/impl.sh #42
+./scripts/impl.sh '#42'
   → Create worktree .worktrees/issue-42/
   → Create tmux session "issue-42" with 5 panes
   → For each stage:
