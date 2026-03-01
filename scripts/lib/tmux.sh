@@ -72,8 +72,17 @@ tmux_send_keys() {
   local session_name="$1"
   local pane_id="$2"
   local command="$3"
+  local is_tui="${4:-false}"
 
-  tmux send-keys -t "$pane_id" "$command" Enter
+  if [[ "$is_tui" == "true" ]]; then
+    # For TUI apps (Claude Code): send text, pause for input to register, then Enter
+    tmux send-keys -t "$pane_id" -l "$command"
+    sleep 1
+    tmux send-keys -t "$pane_id" Enter
+  else
+    # For shell commands: send text + Enter together
+    tmux send-keys -t "$pane_id" "$command" Enter
+  fi
   log_debug "Sent to pane $pane_id: $command"
 }
 

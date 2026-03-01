@@ -395,10 +395,10 @@ launch_agent() {
   log_info "Waiting ${wait_secs}s for Claude to start..."
   sleep "$wait_secs"
 
-  # Send the initial task prompt
+  # Send the initial task prompt (use TUI mode — Claude's input needs a pause before Enter)
   local prompt
   prompt="$(_build_initial_prompt "$stage")"
-  tmux_send_keys "$TMUX_SESSION" "$pane_id" "$prompt"
+  tmux_send_keys "$TMUX_SESSION" "$pane_id" "$prompt" "true"
 
   log_info "Launched $stage agent in pane $pane_id"
 }
