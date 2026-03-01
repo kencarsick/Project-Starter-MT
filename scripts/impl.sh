@@ -10,9 +10,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source all library modules
+# Source log.sh early so _err_handler can use log_error
 # shellcheck source=scripts/lib/log.sh
 source "${SCRIPT_DIR}/lib/log.sh"
+
+# ERR trap — catch silent set -e exits and log what failed
+_err_handler() {
+  local line="$1" func="$2" cmd="$3"
+  log_error "Script failed at line $line in ${func}(): $cmd"
+  log_error "Pipeline halted unexpectedly. Re-run with LOG_DEBUG=1 for details."
+}
+trap '_err_handler $LINENO "${FUNCNAME[0]:-main}" "$BASH_COMMAND"' ERR
+
+# Source all library modules (log.sh already sourced above for ERR trap)
 # shellcheck source=scripts/lib/config.sh
 source "${SCRIPT_DIR}/lib/config.sh"
 # shellcheck source=scripts/lib/tmux.sh
@@ -385,10 +395,16 @@ launch_agent() {
   prod_url="$(get_config prod_url 2>/dev/null || echo "")"
 
   # Generate stage-specific CLAUDE.md
-  generate_claudemd "$WORKTREE_PATH" "$stage" "$ISSUE_NUM" "$REPO" "$prod_url" "$qa_report"
+  if ! generate_claudemd "$WORKTREE_PATH" "$stage" "$ISSUE_NUM" "$REPO" "$prod_url" "$qa_report"; then
+    log_error "Failed to generate CLAUDE.md for stage '$stage'"
+    return 1
+  fi
 
   # Launch Claude in the pane
-  tmux_send_keys "$TMUX_SESSION" "$pane_id" "cd ${WORKTREE_PATH} && claude --dangerously-skip-permissions"
+  tmux_send_keys "$TMUX_SESSION" "$pane_id" "cd ${WORKTREE_PATH} && claude --dangerously-skip-permissions" || {
+    log_error "Failed to send Claude launch command to pane $pane_id"
+    return 1
+  }
 
   # Wait for Claude to fully start (needs time to load CLAUDE.md and show prompt)
   local wait_secs=10
@@ -398,7 +414,10 @@ launch_agent() {
   # Send the initial task prompt (use TUI mode — Claude's input needs a pause before Enter)
   local prompt
   prompt="$(_build_initial_prompt "$stage")"
-  tmux_send_keys "$TMUX_SESSION" "$pane_id" "$prompt" "true"
+  tmux_send_keys "$TMUX_SESSION" "$pane_id" "$prompt" "true" || {
+    log_error "Failed to send initial prompt to pane $pane_id"
+    return 1
+  }
 
   log_info "Launched $stage agent in pane $pane_id"
 }
@@ -565,6 +584,7 @@ run_pipeline() {
 
     local status
     status="$(monitor_stage "$stage")"
+    log_info "Stage $stage returned status: '$status' — evaluating result..."
 
     # QA failure → retry loop
     if [[ "$stage" == "qa" && "$status" == "$SENTINEL_FAIL" ]]; then
@@ -661,12 +681,53 @@ _cleanup_on_interrupt() {
 trap _cleanup_on_interrupt INT TERM
 
 # ---------------------------------------------------------------------------
+# Pipeline state persistence (for CTRL pane re-exec)
+# ---------------------------------------------------------------------------
+
+_save_pipeline_state() {
+  local state_file="${WORKTREE_PATH}/.claude-workflow/.pipeline-state"
+  {
+    printf 'REPO="%s"\n' "$REPO"
+    for s in "${STAGES[@]}"; do
+      local var="PANE_${s//-/_}"
+      local val
+      eval "val=\"\${${var}:-}\""
+      printf '%s="%s"\n' "$var" "$val"
+    done
+  } > "$state_file"
+}
+
+_load_pipeline_state() {
+  WORKTREE_PATH="$(get_worktree_path "$ISSUE_NUM")"
+  TMUX_SESSION="issue-${ISSUE_NUM}"
+
+  local state_file="${WORKTREE_PATH}/.claude-workflow/.pipeline-state"
+  if [[ ! -f "$state_file" ]]; then
+    log_error "Pipeline state file not found: $state_file"
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "$state_file"
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 main() {
   parse_args "$@"
 
+  # ── Monitor mode: re-exec'd inside CTRL tmux pane ──
+  if [[ "${_PIPELINE_CTRL:-}" == "1" ]]; then
+    _load_pipeline_state
+    log_info "=========================================="
+    log_info "Pipeline monitor running for issue #${ISSUE_NUM}"
+    log_info "=========================================="
+    run_pipeline
+    exit $?
+  fi
+
+  # ── Normal mode: setup + launch monitor in tmux ──
   log_info "=========================================="
   log_info "Pipeline starting for issue #${ISSUE_NUM}"
   log_info "=========================================="
@@ -692,7 +753,39 @@ main() {
 
   setup_worktree
   setup_tmux
-  run_pipeline
+
+  # Save state so the CTRL pane can pick it up
+  _save_pipeline_state
+
+  # Create CTRL pane for the pipeline monitor
+  local ctrl_pane_id
+  ctrl_pane_id="$(create_tmux_pane "$TMUX_SESSION" "CTRL #${ISSUE_NUM}")"
+
+  local workflow_dir
+  workflow_dir="$(get_config sentinel.workflow_dir 2>/dev/null || echo ".claude-workflow")"
+  tmux_pipe_pane "$TMUX_SESSION" "$ctrl_pane_id" \
+    "${WORKTREE_PATH}/${workflow_dir}/logs/pipeline.log"
+
+  # Build the command to re-exec ourselves inside the CTRL pane
+  local script_path
+  script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+  local cmd="_PIPELINE_CTRL=1 bash '${script_path}' '${ISSUE_NUM}'"
+  if [[ -n "$FROM_STAGE" ]]; then
+    cmd+=" --from '${FROM_STAGE}'"
+  fi
+
+  tmux_send_keys "$TMUX_SESSION" "$ctrl_pane_id" "$cmd"
+
+  log_info "Pipeline monitor started in CTRL pane"
+  log_info "Attaching to tmux session: $TMUX_SESSION"
+
+  # Attach (or switch if already inside tmux)
+  if [[ -n "${TMUX:-}" ]]; then
+    tmux switch-client -t "$TMUX_SESSION" 2>/dev/null || true
+  else
+    exec tmux attach-session -t "$TMUX_SESSION"
+  fi
 }
 
 main "$@"

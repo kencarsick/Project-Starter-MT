@@ -32,7 +32,7 @@ _log_timestamp() {
 
 log_info() {
   local msg="$1"
-  printf "${BLUE}[%s] [INFO]${RESET} %s\n" "$(_log_timestamp)" "$msg"
+  printf "${BLUE}[%s] [INFO]${RESET} %s\n" "$(_log_timestamp)" "$msg" >&2
 }
 
 log_warn() {
@@ -59,5 +59,5 @@ set_terminal_title() {
   local title="$1"
   # No-op if not in a terminal
   [[ -z "${TERM:-}" || "${TERM:-}" == "dumb" ]] && return 0
-  printf '\033]2;%s\a' "$title"
+  printf '\033]2;%s\a' "$title" >&2
 }

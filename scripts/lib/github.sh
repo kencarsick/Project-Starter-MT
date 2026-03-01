@@ -71,7 +71,9 @@ set_label() {
   # Create label if it doesn't exist (--force updates if it does)
   gh label create "$label_name" --color "ededed" --force 2>/dev/null || true
 
-  gh issue edit "$issue_number" --add-label "$label_name"
+  gh issue edit "$issue_number" --add-label "$label_name" 2>/dev/null || {
+    log_warn "Failed to add label '$label_name' to issue #$issue_number — continuing"
+  }
   log_debug "Added label '$label_name' to issue #$issue_number"
 }
 
